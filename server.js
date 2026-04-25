@@ -25,7 +25,7 @@ app.use(helmet({
 app.use(cors({
   origin: [
     'http://localhost:5173', 
-    'https://bright-kitten-b781c8.netlify.app'
+    'https://opsisai.netlify.app/'
   ],
   credentials: true
 }));
