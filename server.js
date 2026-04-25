@@ -25,8 +25,7 @@ app.use(helmet({
 app.use(cors({
   origin: [
     'http://localhost:5173', 
-    'https://opsisai.netlify.app/'
-  ],
+    'https://opsisai.netlify.app'],
   credentials: true
 }));
 
