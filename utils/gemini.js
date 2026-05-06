@@ -9,14 +9,14 @@ const cleanAndParseJSON = (text) => {
   return JSON.parse(cleaned);
 };
 
-// 🧠 Bulletproof Multi-LLM Fallback Engine (Gemini -> Groq)
+// 🧠 Bulletproof Multi-LLM Fallback Engine
 const callAIWithFallback = async (prompt) => {
   // 1. Primary: Gemini
   try {
     console.log("🤖 Trying Gemini API...");
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    // Updated to the correct active Gemini model
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash-latest' });
+    // ✅ Fixed Gemini Model Name
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
     const result = await model.generateContent(prompt);
     const text = result.response.text().trim();
     console.log("✅ Success with Gemini!");
@@ -29,14 +29,14 @@ const callAIWithFallback = async (prompt) => {
       console.log("🚀 Switching to Groq API...");
       if (!process.env.GROQ_API_KEY) throw new Error("GROQ_API_KEY is missing in .env");
 
-      const groqRes = await fetch("[https://api.groq.com/openai/v1/chat/completions](https://api.groq.com/openai/v1/chat/completions)", {
-        method: "POST",
+      //  NO BRACKETS IN THIS URL!
+      const groqRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
         headers: {
           "Authorization": `Bearer ${process.env.GROQ_API_KEY}`,
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          model: "llama-3.3-70b-versatile", // ✅ The tested and working Groq model
+          model: "llama-3.3-70b-versatile", // ✅ Correct Groq Model
           messages: [{ role: "user", content: prompt }]
         })
       });
@@ -52,11 +52,6 @@ const callAIWithFallback = async (prompt) => {
   }
 };
 
-/**
- * Analyze a medical report text and return structured AI insights.
- * @param {string} extractedText - The raw text extracted from the medical report
- * @returns {Object} - Structured analysis result
- */
 export const analyzeMedicalReport = async (extractedText) => {
   const prompt = `
 You are a world-class clinical AI assistant. Analyze the following medical report text and produce a detailed, structured health analysis. 
@@ -118,11 +113,6 @@ Return this exact JSON structure:
   return await callAIWithFallback(prompt);
 };
 
-/**
- * Analyze symptoms described by the user.
- * @param {string} symptomsText - User-described symptoms
- * @returns {Object} - AI analysis of symptoms
- */
 export const analyzeSymptoms = async (symptomsText) => {
   const prompt = `
 You are a compassionate clinical AI assistant. Analyze the following symptoms and provide helpful, responsible health guidance.
