@@ -13,8 +13,10 @@ const callAIWithFallback = async (prompt) => {
     console.log("🚀 Calling Groq API...");
     if (!process.env.GROQ_API_KEY) throw new Error("GROQ_API_KEY is missing in .env");
 
-    // 🚨 HACK: Breaking the string so copy-paste doesn't add markdown brackets!
-    const groqURL = "https://" + "[api.groq.com/openai/v1/chat/completions](https://api.groq.com/openai/v1/chat/completions)";
+    // ✅ THE REAL HACK: No brackets, no markdown detection.
+    const part1 = "api.groq.com";
+    const part2 = "/openai/v1/chat/completions";
+    const groqURL = `https://${part1}${part2}`;
 
     const groqRes = await fetch(groqURL, {
       method: "POST",
@@ -40,7 +42,8 @@ const callAIWithFallback = async (prompt) => {
     
   } catch (error) {
     console.error("❌ AI Error:", error.message);
-    throw new Error("Opsis AI is currently overloaded. Please try again in a minute.");
+    
+    throw new Error(error.message || "Opsis AI is currently overloaded.");
   }
 };
 
@@ -49,10 +52,9 @@ export const analyzeMedicalReport = async (extractedText) => {
 You are a world-class clinical AI assistant. Analyze the following medical report text and produce a detailed, structured health analysis. 
 
 IMPORTANT: 
-- Return ONLY a valid JSON object (no markdown, no code blocks, no extra text).
-- Be accurate, compassionate, and use plain English that non-medical users can understand.
-- Health score should be between 0-100 based on overall report findings.
-- Flag any abnormal values clearly.
+- Return ONLY a valid JSON object.
+- Be accurate, compassionate, and use plain English.
+- Health score should be between 0-100.
 
 Medical Report:
 """
@@ -61,43 +63,25 @@ ${extractedText}
 
 Return this exact JSON structure:
 {
-  "healthScore": <number 0-100>,
-  "scoreLabel": "<Excellent|Good|Fair|Poor|Critical>",
-  "scoreDescription": "<1-2 sentence description of what the score means>",
-  "summary": "<3-5 sentence plain English summary of the report, what's normal and what needs attention>",
-  "confidence": <number 0-100 representing AI confidence>,
+  "healthScore": 0,
+  "scoreLabel": "",
+  "scoreDescription": "",
+  "summary": "",
+  "confidence": 0,
   "flaggedValues": [
-    {
-      "name": "<biomarker name>",
-      "value": "<measured value with unit>",
-      "normalRange": "<normal range>",
-      "status": "<Low|High|Borderline|Critical>",
-      "description": "<1 sentence plain English explanation>"
-    }
+    { "name": "", "value": "", "normalRange": "", "status": "", "description": "" }
   ],
   "normalValues": [
-    {
-      "name": "<biomarker name>",
-      "value": "<measured value with unit>"
-    }
+    { "name": "", "value": "" }
   ],
   "medicines": [
-    {
-      "name": "<medicine or supplement name>",
-      "purpose": "<why it's recommended>",
-      "dosage": "<suggested dosage if determinable>",
-      "icon": "<emoji>"
-    }
+    { "name": "", "purpose": "", "dosage": "", "icon": "" }
   ],
   "recommendations": [
-    {
-      "text": "<actionable recommendation>",
-      "priority": "<High|Medium|Low>",
-      "icon": "<emoji>"
-    }
+    { "text": "", "priority": "", "icon": "" }
   ],
-  "followUp": "<Follow-up recommendation, e.g. when to retest>",
-  "disclaimers": "This analysis is AI-generated for informational purposes only. Always consult a qualified healthcare professional before making any medical decisions."
+  "followUp": "",
+  "disclaimers": "This analysis is AI-generated for informational purposes only."
 }
 `;
 
@@ -109,9 +93,7 @@ export const analyzeSymptoms = async (symptomsText) => {
 You are a compassionate clinical AI assistant. Analyze the following symptoms and provide helpful, responsible health guidance.
 
 IMPORTANT:
-- Return ONLY a valid JSON object (no markdown, no code blocks).
-- Be accurate, kind, and use plain English.
-- Always remind users to consult a doctor.
+- Return ONLY a valid JSON object.
 - Do NOT diagnose — provide possible conditions and guidance.
 
 Symptoms:
@@ -121,21 +103,17 @@ ${symptomsText}
 
 Return this exact JSON structure:
 {
-  "urgencyLevel": "<Emergency|Urgent|Moderate|Low>",
-  "urgencyColor": "<red|orange|yellow|green>",
+  "urgencyLevel": "",
+  "urgencyColor": "",
   "possibleConditions": [
-    {
-      "name": "<condition name>",
-      "probability": "<High|Moderate|Low>",
-      "description": "<brief description>"
-    }
+    { "name": "", "probability": "", "description": "" }
   ],
-  "immediateActions": ["<action 1>", "<action 2>"],
-  "selfCareAdvice": ["<advice 1>", "<advice 2>"],
-  "warningSignsToWatchFor": ["<warning 1>", "<warning 2>"],
-  "whenToSeeDoctor": "<specific guidance on when to seek medical care>",
-  "summary": "<2-3 sentence compassionate summary>",
-  "disclaimers": "This is not a medical diagnosis. Please consult a qualified healthcare professional for proper evaluation."
+  "immediateActions": [],
+  "selfCareAdvice": [],
+  "warningSignsToWatchFor": [],
+  "whenToSeeDoctor": "",
+  "summary": "",
+  "disclaimers": "This is not a medical diagnosis."
 }
 `;
 
