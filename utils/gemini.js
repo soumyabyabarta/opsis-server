@@ -6,14 +6,11 @@ const cleanAndParseJSON = (text) => {
     .trim();
   return JSON.parse(cleaned);
 };
-
-// 🚀 Bulletproof AI Engine (Powered by Groq)
 const callAIWithFallback = async (prompt) => {
   try {
     console.log("🚀 Calling Groq API...");
     if (!process.env.GROQ_API_KEY) throw new Error("GROQ_API_KEY is missing in .env");
 
-    // ✅ THE REAL HACK: No brackets, no markdown detection.
     const part1 = "api.groq.com";
     const part2 = "/openai/v1/chat/completions";
     const groqURL = `https://${part1}${part2}`;
@@ -37,11 +34,11 @@ const callAIWithFallback = async (prompt) => {
     }
     
     const groqData = await groqRes.json();
-    console.log("✅ Success with Groq!");
+    console.log("Success with Groq!");
     return cleanAndParseJSON(groqData.choices[0].message.content);
     
   } catch (error) {
-    console.error("❌ AI Error:", error.message);
+    console.error(" AI Error:", error.message);
     
     throw new Error(error.message || "Opsis AI is currently overloaded.");
   }
