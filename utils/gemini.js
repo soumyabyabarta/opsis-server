@@ -1,5 +1,3 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
-
 const cleanAndParseJSON = (text) => {
   const cleaned = text
     .replace(/^```json\n?/, '')
@@ -9,69 +7,58 @@ const cleanAndParseJSON = (text) => {
   return JSON.parse(cleaned);
 };
 
-// 🧠 Bulletproof Multi-LLM Fallback Engine (Using Native Fetch)
+// 🧠 Bulletproof Multi-LLM Engine (Groq -> DeepSeek)
 const callAIWithFallback = async (prompt) => {
-  // gemini
+  // 1. Primary: Groq
   try {
-    console.log("🤖 Trying Gemini API...");
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: 'gemini-flash-latest' });
-    const result = await model.generateContent(prompt);
-    const text = result.response.text().trim();
-    console.log("✅ Success with Gemini!");
-    return cleanAndParseJSON(text);
-  } catch (geminiError) {
-    console.error("❌ Gemini failed:", geminiError.message);
-    
-    // gemini -> Groq
-    try {
-      console.log("🚀 Switching to Groq API...");
-      if (!process.env.GROQ_API_KEY) throw new Error("GROQ_API_KEY is missing in .env");
+    console.log("🚀 Trying Groq API...");
+    if (!process.env.GROQ_API_KEY) throw new Error("GROQ_API_KEY is missing in .env");
 
-      const groqRes = await fetch("[https://api.groq.com/openai/v1/chat/completions](https://api.groq.com/openai/v1/chat/completions)", {
+    const groqRes = await fetch("[https://api.groq.com/openai/v1/chat/completions](https://api.groq.com/openai/v1/chat/completions)", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${process.env.GROQ_API_KEY}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: "llama3-8b-8192", // Groq Llama 3
+        messages: [{ role: "user", content: prompt }]
+      })
+    });
+
+    if (!groqRes.ok) throw new Error(`Groq HTTP Error: ${groqRes.status}`);
+    const groqData = await groqRes.json();
+    console.log("✅ Success with Groq!");
+    return cleanAndParseJSON(groqData.choices[0].message.content);
+    
+  } catch (groqError) {
+    console.error("❌ Groq failed:", groqError.message);
+
+    // 2. Fallback: DeepSeek
+    try {
+      console.log("🧠 Switching to DeepSeek API...");
+      if (!process.env.DEEPSEEK_API_KEY) throw new Error("DEEPSEEK_API_KEY is missing in .env");
+
+      const deepseekRes = await fetch("[https://api.deepseek.com/chat/completions](https://api.deepseek.com/chat/completions)", {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${process.env.GROQ_API_KEY}`,
+          "Authorization": `Bearer ${process.env.DEEPSEEK_API_KEY}`,
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          model: "llama3-8b-8192", // Groq Llama 3
+          model: "deepseek-chat",
           messages: [{ role: "user", content: prompt }]
         })
       });
 
-      if (!groqRes.ok) throw new Error(`Groq HTTP Error: ${groqRes.status}`);
-      const groqData = await groqRes.json();
-      console.log("✅ Success with Groq!");
-      return cleanAndParseJSON(groqData.choices[0].message.content);
-    } catch (groqError) {
-      console.error("❌ Groq failed:", groqError.message);
-
-      // Groq-> DeepSeek
-      try {
-        console.log("🧠 Switching to DeepSeek API...");
-        if (!process.env.DEEPSEEK_API_KEY) throw new Error("DEEPSEEK_API_KEY is missing in .env");
-
-        const deepseekRes = await fetch("[https://api.deepseek.com/chat/completions](https://api.deepseek.com/chat/completions)", {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${process.env.DEEPSEEK_API_KEY}`,
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            model: "deepseek-chat",
-            messages: [{ role: "user", content: prompt }]
-          })
-        });
-
-        if (!deepseekRes.ok) throw new Error(`DeepSeek HTTP Error: ${deepseekRes.status}`);
-        const deepseekData = await deepseekRes.json();
-        console.log("✅ Success with DeepSeek!");
-        return cleanAndParseJSON(deepseekData.choices[0].message.content);
-      } catch (deepseekError) {
-        console.error("❌ DeepSeek failed:", deepseekError.message);
-        throw new Error("All AI models are currently overloaded. Please try again in a minute.");
-      }
+      if (!deepseekRes.ok) throw new Error(`DeepSeek HTTP Error: ${deepseekRes.status}`);
+      const deepseekData = await deepseekRes.json();
+      console.log("✅ Success with DeepSeek!");
+      return cleanAndParseJSON(deepseekData.choices[0].message.content);
+      
+    } catch (deepseekError) {
+      console.error("❌ DeepSeek failed:", deepseekError.message);
+      throw new Error("All AI models are currently overloaded. Please try again in a minute.");
     }
   }
 };
