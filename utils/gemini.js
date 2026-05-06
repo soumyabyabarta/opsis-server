@@ -1,5 +1,3 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
-
 const cleanAndParseJSON = (text) => {
   const cleaned = text
     .replace(/^```json\n?/, '')
@@ -9,46 +7,37 @@ const cleanAndParseJSON = (text) => {
   return JSON.parse(cleaned);
 };
 
-// 🧠 Bulletproof Multi-LLM Fallback Engine
+// 🚀 Bulletproof AI Engine (Powered by Groq)
 const callAIWithFallback = async (prompt) => {
-  // 1. Primary: Gemini
   try {
-    console.log("🤖 Trying Gemini API...");
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    // ✅ Fixed Gemini Model Name
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-    const result = await model.generateContent(prompt);
-    const text = result.response.text().trim();
-    console.log("✅ Success with Gemini!");
-    return cleanAndParseJSON(text);
-  } catch (geminiError) {
-    console.error("❌ Gemini failed:", geminiError.message);
-    
-    // 2. Fallback: Groq
-    try {
-      console.log("🚀 Switching to Groq API...");
-      if (!process.env.GROQ_API_KEY) throw new Error("GROQ_API_KEY is missing in .env");
+    console.log("🚀 Calling Groq API...");
+    if (!process.env.GROQ_API_KEY) throw new Error("GROQ_API_KEY is missing in .env");
 
-      //  NO BRACKETS IN THIS URL!
-      const groqRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-        headers: {
-          "Authorization": `Bearer ${process.env.GROQ_API_KEY}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          model: "llama-3.3-70b-versatile", // ✅ Correct Groq Model
-          messages: [{ role: "user", content: prompt }]
-        })
-      });
+    const groqRes = await fetch("[https://api.groq.com/openai/v1/chat/completions](https://api.groq.com/openai/v1/chat/completions)", {
+      method: "POST", // 🚨 এই লাইনটাই ডিলিট হয়ে গেছিল!
+      headers: {
+        "Authorization": `Bearer ${process.env.GROQ_API_KEY}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: "llama-3.3-70b-versatile", // ✅ Tested and working model
+        messages: [{ role: "user", content: prompt }],
+        temperature: 0.1
+      })
+    });
 
-      if (!groqRes.ok) throw new Error(`Groq HTTP Error: ${groqRes.status}`);
-      const groqData = await groqRes.json();
-      console.log("✅ Success with Groq!");
-      return cleanAndParseJSON(groqData.choices[0].message.content);
-    } catch (groqError) {
-      console.error("❌ Groq failed:", groqError.message);
-      throw new Error("All AI models are currently overloaded. Please try again in a minute.");
+    if (!groqRes.ok) {
+      const errText = await groqRes.text();
+      throw new Error(`Groq HTTP Error: ${groqRes.status} - ${errText}`);
     }
+    
+    const groqData = await groqRes.json();
+    console.log("✅ Success with Groq!");
+    return cleanAndParseJSON(groqData.choices[0].message.content);
+    
+  } catch (error) {
+    console.error("❌ AI Error:", error.message);
+    throw new Error("Opsis AI is currently overloaded. Please try again in a minute.");
   }
 };
 
@@ -61,7 +50,6 @@ IMPORTANT:
 - Be accurate, compassionate, and use plain English that non-medical users can understand.
 - Health score should be between 0-100 based on overall report findings.
 - Flag any abnormal values clearly.
-- Under NO circumstances should you mention "Gemini", "Google", "OpenAI", "DeepSeek", "Groq", or being a large language model in your response. You must act strictly as the "Opsis AI Clinical Assistant" and refer to yourself as "Opsis AI" if necessary.
 
 Medical Report:
 """
@@ -122,7 +110,6 @@ IMPORTANT:
 - Be accurate, kind, and use plain English.
 - Always remind users to consult a doctor.
 - Do NOT diagnose — provide possible conditions and guidance.
-- Under NO circumstances should you mention "Gemini", "Google", "OpenAI", "DeepSeek", "Groq", or being a large language model in your response. You must act strictly as the "Opsis AI Clinical Assistant" and refer to yourself as "Opsis AI" if necessary.
 
 Symptoms:
 """
