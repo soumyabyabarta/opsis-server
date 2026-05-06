@@ -13,14 +13,17 @@ const callAIWithFallback = async (prompt) => {
     console.log("🚀 Calling Groq API...");
     if (!process.env.GROQ_API_KEY) throw new Error("GROQ_API_KEY is missing in .env");
 
-    const groqRes = await fetch("[https://api.groq.com/openai/v1/chat/completions](https://api.groq.com/openai/v1/chat/completions)", {
-      method: "POST", // 🚨 এই লাইনটাই ডিলিট হয়ে গেছিল!
+    // 🚨 HACK: Breaking the string so copy-paste doesn't add markdown brackets!
+    const groqURL = "https://" + "[api.groq.com/openai/v1/chat/completions](https://api.groq.com/openai/v1/chat/completions)";
+
+    const groqRes = await fetch(groqURL, {
+      method: "POST",
       headers: {
         "Authorization": `Bearer ${process.env.GROQ_API_KEY}`,
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        model: "llama-3.3-70b-versatile", // ✅ Tested and working model
+        model: "llama-3.3-70b-versatile",
         messages: [{ role: "user", content: prompt }],
         temperature: 0.1
       })
