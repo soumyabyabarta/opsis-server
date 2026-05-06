@@ -14,7 +14,7 @@ const callAIWithFallback = async (prompt) => {
     console.log("🚀 Trying Groq API...");
     if (!process.env.GROQ_API_KEY) throw new Error("GROQ_API_KEY is missing in .env");
 
-    const groqRes = await fetch("[https://api.groq.com/openai/v1/chat/completions](https://api.groq.com/openai/v1/chat/completions)", {
+    const groqRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${process.env.GROQ_API_KEY}`,
@@ -39,7 +39,7 @@ const callAIWithFallback = async (prompt) => {
       console.log("🧠 Switching to DeepSeek API...");
       if (!process.env.DEEPSEEK_API_KEY) throw new Error("DEEPSEEK_API_KEY is missing in .env");
 
-      const deepseekRes = await fetch("[https://api.deepseek.com/chat/completions](https://api.deepseek.com/chat/completions)", {
+      const deepseekRes = await fetch("https://api.deepseek.com/chat/completions", {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${process.env.DEEPSEEK_API_KEY}`,
